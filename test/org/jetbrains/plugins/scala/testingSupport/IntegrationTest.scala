@@ -1,5 +1,7 @@
 package org.jetbrains.plugins.scala.testingSupport
 
+import java.util.regex.{Matcher, Pattern}
+
 import com.intellij.testFramework.UsefulTestCase
 import com.intellij.util.concurrency.Semaphore
 import javax.swing.SwingUtilities
@@ -215,8 +217,13 @@ trait IntegrationTest {
     assert(startLineNumber == sourceLine)
   }
 
+  def unescapeTestName(testName: String): String = {
+    val pattern: Pattern = Pattern.compile("([^\\\\])\\\\n")
+    val matcher: Matcher = pattern.matcher(testName)
+    return matcher.replaceAll("$1\n").replace("\\\\", "\\")
+  }
   private def parseTestName(testName: String): Seq[String] = {
-    testName.split("\n").map(TestRunnerUtil.unescapeTestName)
+    testName.split("\n").map(unescapeTestName)
   }
 
 }
