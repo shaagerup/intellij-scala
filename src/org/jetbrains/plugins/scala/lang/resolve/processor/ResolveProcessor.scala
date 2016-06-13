@@ -9,13 +9,15 @@ import com.intellij.psi.scope._
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.plugins.scala.extensions._
+import org.jetbrains.plugins.scala.lang.lexer.ScalaTokenTypes
 import org.jetbrains.plugins.scala.lang.psi.ScalaPsiUtil
-import org.jetbrains.plugins.scala.lang.psi.api.expr.{ScSuperReference, ScThisReference}
+import org.jetbrains.plugins.scala.lang.psi.api.expr.{ScAnnotation, ScSuperReference, ScThisReference}
 import org.jetbrains.plugins.scala.lang.psi.api.statements.params.ScTypeParam
 import org.jetbrains.plugins.scala.lang.psi.api.statements.{ScTypeAlias, ScTypeAliasDefinition}
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.templates.ScTemplateBody
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.{ScClass, ScObject, ScTrait, ScTypeDefinition}
 import org.jetbrains.plugins.scala.lang.psi.impl.ScPackageImpl
+import org.jetbrains.plugins.scala.lang.psi.impl.toplevel.typedef.ScObjectImpl
 import org.jetbrains.plugins.scala.lang.psi.types.ScTypeExt
 import org.jetbrains.plugins.scala.lang.psi.types.api.TypeSystem
 import org.jetbrains.plugins.scala.lang.psi.types.result.{Success, TypingContext}
@@ -172,7 +174,18 @@ class ResolveProcessor(override val kinds: Set[ResolveTargets.Value],
       name
     } else  nameSet
     val nameMatches = ScalaPsiUtil.memberNamesEquals(elName, name)
-    nameMatches && kindMatches(named)
+    nameMatches && (kindMatches(named) || metaAnnotHackMatches(named))
+  }
+
+  // for the time being meta annotations are objects with no other indication of them being an annotation
+  // so we have to resolve to a constructor which given object doesn't have
+  protected def metaAnnotHackMatches(named: PsiNamedElement): Boolean = {
+    def fromAnnot = getPlace.contexts.exists(_.isInstanceOf[ScAnnotation])
+    named match {
+      case o:ScObject if fromAnnot =>
+        o.members.exists(_.getModifierList.findChildrenByType(ScalaTokenTypes.kINLINE).nonEmpty)
+      case _ => false
+    }
   }
 
   override def getHint[T](hintKey: Key[T]): T = {
