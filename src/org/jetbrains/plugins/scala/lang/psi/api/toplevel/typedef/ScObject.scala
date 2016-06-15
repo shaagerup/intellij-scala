@@ -59,4 +59,8 @@ trait ScObject extends ScTypeDefinition with ScTypedDefinition with ScMember wit
    *         so it's reaonable to use it only for Predef and scala classes
    */
   def getHardSignatures: TypeDefinitionMembers.SignatureNodes.Map
+
+  def isMetaAnnotatationImpl: Boolean = {
+    members.exists(_.getModifierList.findChildrenByType(ScalaTokenTypes.kINLINE).nonEmpty)
+  }
 }

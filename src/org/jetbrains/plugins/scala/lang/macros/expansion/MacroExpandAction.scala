@@ -8,7 +8,9 @@ import com.intellij.notification.{NotificationGroup, NotificationType}
 import com.intellij.openapi.actionSystem.{AnAction, AnActionEvent}
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.VirtualFileManager
@@ -20,14 +22,18 @@ import org.jetbrains.plugin.scala.util.MacroExpansion
 import org.jetbrains.plugins.scala.ScalaBundle
 import org.jetbrains.plugins.scala.extensions.inWriteCommandAction
 import org.jetbrains.plugins.scala.lang.lexer.ScalaTokenTypes
-import org.jetbrains.plugins.scala.lang.psi.ScalaPsiElement
+import org.jetbrains.plugins.scala.lang.psi.api.base.ScReferenceElement
+import org.jetbrains.plugins.scala.lang.psi.{ScalaPsiElement, ScalaPsiUtil}
 import org.jetbrains.plugins.scala.lang.psi.api.expr.{ScAnnotation, ScBlock, ScMethodCall}
 import org.jetbrains.plugins.scala.lang.psi.api.statements.ScAnnotationsHolder
+import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScObject
 import org.jetbrains.plugins.scala.lang.psi.api.{ScalaFile, ScalaRecursiveElementVisitor}
 import org.jetbrains.plugins.scala.lang.psi.impl.ScalaPsiElementFactory
+import org.jetbrains.plugins.scala.lang.resolve.ResolvableReferenceElement
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
+import scala.meta.trees.TreeConverter
 
 
 class MacroExpandAction extends AnAction {
@@ -39,17 +45,38 @@ class MacroExpandAction extends AnAction {
 
   override def actionPerformed(e: AnActionEvent): Unit = {
 
-    implicit val currentEvent = e
+
 
     UsageTrigger.trigger(ScalaBundle.message("macro.expand.action.id"))
 
     val sourceEditor = FileEditorManager.getInstance(e.getProject).getSelectedTextEditor
     val psiFile = PsiDocumentManager.getInstance(e.getProject).getPsiFile(sourceEditor.getDocument)
-    val candidates = psiFile match {
-      case file: ScalaFile => findCandidatesInFile(file)
-      case _ => Seq.empty
-    }
 
+    expandMeta(e, sourceEditor, psiFile.asInstanceOf[ScalaFile])
+    expandSerialized(e, sourceEditor, psiFile)
+  }
+
+  private def expandMeta(e: AnActionEvent, sourceEditor: Editor, psiFile: ScalaFile) = {
+    val converter = new TreeConverter {
+      override def getCurrentProject: Project = e.getProject
+    }
+    val offset = sourceEditor.getCaretModel.getOffset
+    val annotClass = ScalaPsiUtil.getParentOfType(psiFile.elementAt(offset).get, classOf[ScReferenceElement])
+      .asInstanceOf[ScReferenceElement]
+      .bind()
+    val annotee = ScalaPsiUtil.getParentOfType(psiFile.elementAt(offset).get, classOf[ScAnnotationsHolder])
+    annotClass.foreach { res =>
+      res.element match {
+        case o: ScObject if o.isMetaAnnotatationImpl =>
+          val converted = converter.ideaToMeta(annotee)
+          ""
+        case _ =>
+      }
+    }
+  }
+
+  private def expandSerialized(e: AnActionEvent, sourceEditor: Editor, psiFile: PsiFile): Unit = {
+    implicit val currentEvent = e
     suggestUsingCompilerFlag(e, psiFile)
 
     val expansions = deserializeExpansions(e)
@@ -61,11 +88,10 @@ class MacroExpandAction extends AnAction {
 
     // if macro is under cursor, expand it, otherwise expand all macros in current file
     resolved
-      .find(_.expansion.place.line == sourceEditor.getCaretModel.getLogicalPosition.line+1)
+      .find(_.expansion.place.line == sourceEditor.getCaretModel.getLogicalPosition.line + 1)
       .map(expandMacroUnderCursor)
       .getOrElse(expandAllMacroInCurrentFile(resolved))
   }
-
 
   def expandMacroUnderCursor(expansion: ResolvedMacroExpansion)(implicit e: AnActionEvent) = {
     inWriteCommandAction(e.getProject) {

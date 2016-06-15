@@ -182,8 +182,7 @@ class ResolveProcessor(override val kinds: Set[ResolveTargets.Value],
   protected def metaAnnotHackMatches(named: PsiNamedElement): Boolean = {
     def fromAnnot = getPlace.contexts.exists(_.isInstanceOf[ScAnnotation])
     named match {
-      case o:ScObject if fromAnnot =>
-        o.members.exists(_.getModifierList.findChildrenByType(ScalaTokenTypes.kINLINE).nonEmpty)
+      case o:ScObject if fromAnnot => o.isMetaAnnotatationImpl
       case _ => false
     }
   }

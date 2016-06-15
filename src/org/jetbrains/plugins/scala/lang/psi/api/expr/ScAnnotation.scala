@@ -5,6 +5,7 @@ package api
 package expr
 
 import com.intellij.psi.PsiAnnotation
+import org.jetbrains.plugins.scala.lang.lexer.ScalaTokenTypes
 import org.jetbrains.plugins.scala.lang.psi.api.base.types.ScTypeElement
 
 /**
@@ -28,4 +29,16 @@ trait ScAnnotation extends ScalaPsiElement with PsiAnnotation {
   def constructor = annotationExpr.constr
 
   def typeElement: ScTypeElement
+
+  def isMetaAnnotation: Boolean = {
+    import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScObject
+    constructor.reference.exists {
+      ref => ref.bind().exists {
+        result => result.element match {
+          case o: ScObject => o.isMetaAnnotatationImpl
+          case _ => false
+        }
+      }
+    }
+  }
 }
