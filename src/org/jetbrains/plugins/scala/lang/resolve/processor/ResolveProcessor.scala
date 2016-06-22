@@ -174,17 +174,7 @@ class ResolveProcessor(override val kinds: Set[ResolveTargets.Value],
       name
     } else  nameSet
     val nameMatches = ScalaPsiUtil.memberNamesEquals(elName, name)
-    nameMatches && (kindMatches(named) || metaAnnotHackMatches(named))
-  }
-
-  // for the time being meta annotations are objects with no other indication of them being an annotation
-  // so we have to resolve to a constructor which given object doesn't have
-  protected def metaAnnotHackMatches(named: PsiNamedElement): Boolean = {
-    def fromAnnot = getPlace.contexts.exists(_.isInstanceOf[ScAnnotation])
-    named match {
-      case o:ScObject if fromAnnot => o.isMetaAnnotatationImpl
-      case _ => false
-    }
+    nameMatches && kindMatches(named)
   }
 
   override def getHint[T](hintKey: Key[T]): T = {
