@@ -33,8 +33,6 @@
         <element id="archive" name="scala-nailgun-runner.jar">
           <element id="module-output" name="nailgunRunners" />
         </element>
-        <element id="library" level="project" name="SBT: org.scalastyle:scalastyle_2.11:0.8.0:jar" />
-        <element id="library" level="project" name="SBT: org.scalariform:scalariform_2.11:0.1.7:jar" />
         <element id="library" level="project" name="SBT: org.codehaus.plexus:plexus-container-default:1.5.5:jar" />
         <element id="library" level="project" name="SBT: org.apache.httpcomponents:httpclient:4.3.1:jar" />
         <element id="library" level="project" name="SBT: commons-codec:commons-codec:1.6:jar" />
@@ -61,7 +59,6 @@
         <element id="library" level="project" name="SBT: org.eclipse.aether:aether-util:1.0.0.v20140518:jar" />
         <element id="library" level="project" name="SBT: org.apache.httpcomponents:httpcore:4.3.1:jar" />
         <element id="library" level="project" name="SBT: org.scala-lang:scala-library:2.11.6:jar" />
-        <element id="library" level="project" name="SBT: org.scala-lang:scala-reflect:2.11.6:jar" />
         <element id="library" level="project" name="SBT: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.4:jar" />
         <element id="library" level="project" name="SBT: org.apache.lucene:lucene-analyzers-common:4.8.1:jar" />
         <element id="library" level="project" name="SBT: org.apache.lucene:lucene-core:4.8.1:jar" />
@@ -73,8 +70,11 @@
         <element id="archive" name="scalap.jar">
           <element id="module-output" name="scalap" />
         </element>
-        <element id="library" level="project" name="SBT: org.jetbrains:sbt-structure-core_2.11:5.1.2:jar" />
         <element id="library" level="project" name="SBT: org.scalatest:scalatest-finders-patched:0.9.8:jar" />
+        <element id="library" level="project" name="SBT: org.jetbrains:sbt-structure-core_2.12.0-M4:5.1.2-2-ga8075f0:jar" />
+        <element id="library" level="project" name="SBT: org.scala-lang:scala-reflect:2.12.0-M4:jar" />
+        <element id="library" level="project" name="SBT: org.scalariform:scalariform_2.12.0-M4:0.2.0:jar" />
+        <element id="library" level="project" name="SBT: org.scalastyle:scalastyle_2.12.0-M4:0.9.0:jar" />
       </element>
       <element id="directory" name="launcher">
         <element id="library" level="project" name="SBT: org.jetbrains:sbt-structure-extractor-0-12:5.1.2:jar" />
